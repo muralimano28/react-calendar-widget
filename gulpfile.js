@@ -16,12 +16,12 @@ var gulp = require('gulp'),
 
 
 var config = {
-	port: 8000,
+	port: 8001,
 	devBaseUrl: 'http://localhost',
 	paths: {
 		html: './src/*.html',
-		jsx: [
-            './src/**/*.jsx'
+		js: [
+            './src/**/*.js'
         ],
 		css: [
             './src/styles/*.css'
@@ -54,7 +54,7 @@ gulp.task('html', function() {
 		.pipe(connect.reload());
 });
 
-gulp.task('jsx', function() {
+gulp.task('js', function() {
 	browserify(config.paths.mainJs, '!./src/assets')
 		.transform(reactify)
 		.bundle()
@@ -72,7 +72,7 @@ gulp.task('css', function() {
 });
 
 gulp.task('lint', function() {
-	return gulp.src(config.paths.jsx)
+	return gulp.src(config.paths.js)
 		.pipe(lint({config: 'eslint.config.json'}))
 		.pipe(lint.format());
 });
@@ -106,15 +106,19 @@ gulp.task('assets', function() {
 
 gulp.task('watch', function() {
 	gulp.watch(config.paths.html, ['html']);
-	gulp.watch(config.paths.jsx, ['js', 'lint']);
+	gulp.watch(config.paths.js, ['js', 'lint']);
     gulp.watch(config.paths.css, ['css']);
 	gulp.watch(config.paths.assests, ['assets']);
 });
 
 // This is for build process alone.
+gulp.task('distHtml', function () {
+	gulp.src(config.paths.html)
+		.pipe(gulp.dest(config.paths.dist));
+});
 
 gulp.task('uglifiedJs', function() {
-	gulp.src(config.paths.dist + '/scripts/bundle.js')
+	gulp.src(config.paths.build + '/scripts/bundle.js')
 		.pipe(streamify(uglify({
             "compress": true,
             "preserveComments": false
@@ -124,7 +128,7 @@ gulp.task('uglifiedJs', function() {
 });
 
 gulp.task('minifiedCss', function() {
-	gulp.src(config.paths.dist + '/styles/bundle.css')
+	gulp.src(config.paths.build + '/styles/bundle.css')
 		.pipe(streamify(minifyCss({
             "compatibility": "ie9"
         })))
@@ -137,4 +141,4 @@ gulp.task('distAssets', function() {
 });
 
 gulp.task('default', ['html', 'js', 'css', 'lint', 'assets', 'open', 'watch']);
-gulp.task('build', ['html', 'uglifiedJs', 'minifiedCss', 'distAssets']);
+gulp.task('build', ['distHtml', 'uglifiedJs', 'minifiedCss', 'distAssets']);

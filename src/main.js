@@ -4,6 +4,6 @@ var React = require("react"),
     ReactDOM = require("react-dom");
 
 // Components
-var Calendar = require("./src/components/calendar.jsx");
+var Calendar = require("./components/calendar.js");
 
 ReactDOM.render(<Calendar />, document.getElementById("calendar"));
