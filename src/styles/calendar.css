@@ -1,0 +1,71 @@
+.calendar-container {
+    text-align: center;
+    min-height: 14em;
+    min-width: 14em;
+}
+/*.calendar-container .date-input-container {
+    height: 10%;
+}
+.calendar-container .date-input-container .input-box,
+.calendar-container .date-input-container .error-msg {
+    height: 40%;
+}
+.calendar-container .calendar-display-container {
+    height: 90%;
+}
+.calendar-container .calendar-display-container .calendar-btn-group,
+.calendar-container .calendar-display-container .error-msg {
+    height: 10%;
+}
+.calendar-container .calendar-display-container .table {
+    height: 80%;
+}
+.calendar-container .calendar-display-container .table .head{
+    height: 20%;
+}
+.calendar-container .calendar-display-container .table .head .row,
+.calendar-container .calendar-display-container .table .head .col,
+.calendar-container .calendar-display-container .table .body .col{
+    height: 100%;
+}
+.calendar-container .calendar-display-container .table .body{
+    height: 80%;
+}
+.calendar-container .calendar-display-container .table .body .row{
+    height: 16.5%;
+}*/
+.calendar-container .calendar-display-container .calendar-btn-group .month-btn-group ,
+.calendar-container .calendar-display-container .calendar-btn-group .year-btn-group {
+    display: inline-block;
+    width: 40%;
+    margin: 0 5%;
+}
+.calendar-container .calendar-display-container .calendar-btn-group .label-btn {
+    width: 50%;
+    margin: 0 5%;
+}
+.calendar-container .calendar-display-container .calendar-btn-group .prev-btn,
+.calendar-container .calendar-display-container .calendar-btn-group .next-btn {
+    width: 20%;
+    margin: 0 5%;
+}
+.calendar-container .calendar-display-container .calendar-btn-group .prev-btn::before,
+.calendar-container .calendar-display-container .calendar-btn-group .next-btn::before {
+    font-family: "FontAwesome";
+    color: inherit;
+    cursor: pointer;
+}
+.calendar-container .calendar-display-container .calendar-btn-group .prev-btn::before {
+    content: "\f137";
+}
+.calendar-container .calendar-display-container .calendar-btn-group .next-btn::before {
+    content: "\f138";
+}
+.calendar-container .calendar-display-container .table .col {
+    display: inline-block;
+    width: 13%;
+    border: 1px solid #ccc;
+}
+.calendar-container .calendar-display-container .table .head .col {
+    font-weight: 600;
+}

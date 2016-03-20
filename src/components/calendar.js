@@ -2,6 +2,9 @@
 
 var React = require("react");
 
+// External library for dates.
+// var moment = require("moment");
+
 // Global variables
 var daysLabel = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     monthsLabel = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -31,7 +34,7 @@ var Calendar = React.createClass({
 
         if (startDateObjInMS && dateObjInMS < startDateObjInMS) {
             result.validity = false;
-            result.errorMsg = "Please enter date same or after " + startDateObj.toDateString();
+            result.errorMsg = "Please enter a date same or after " + startDateObj.toDateString();
             return result;
         }
         if (endDateObjInMS && dateObjInMS > endDateObjInMS) {
@@ -79,7 +82,7 @@ var Calendar = React.createClass({
             return result;
         }
         // Checking if date is within startdate and enddate limit.
-        if (this.props.startDateLimit && this.props.endDateLimit) {
+        if (this.props.startDateLimit || this.props.endDateLimit) {
             var check = this._checkIfDateIsWithinLimit(dateObj, this.props.startDateLimit, this.props.endDateLimit);
             if (!check.validity) {
                 result.validity = false;
@@ -101,6 +104,11 @@ var Calendar = React.createClass({
         });
     },
 
+    _onDateChange: function () {
+        var changedDate = new Date(this.state.currentYear, this.state.currentMonth, this.state.currentDate);
+        this.props.onChange(changedDate);
+    },
+
     _onEnteringDate: function (e) {
         e.preventDefault();
 
@@ -116,6 +124,9 @@ var Calendar = React.createClass({
             // Valid date. Clear error msg and set state with user entered date.
             this.refs.inputBoxErrorMsg.innerHTML = dateCheck.errorMsg;
             this._setDateValues(new Date(year, (month - 1), date).getDay(), date, (month - 1), year);
+
+            // Call this.props.onChange with changed date.
+            this._onDateChange();
         } else {
             // Invalid date. Set error msg and return.
             this.refs.inputBoxErrorMsg.innerHTML = dateCheck.errorMsg;
@@ -123,6 +134,132 @@ var Calendar = React.createClass({
         }
     },
 
+    _handleDateClick: function (type, e) {
+        e.preventDefault();
+
+        var changedDate = +e.target.innerHTML,
+            changedMonth = this.state.currentMonth,
+            changedYear = this.state.currentYear;
+
+        switch (type) {
+            case "prev":
+                changedMonth = (this.state.currentMonth === 0) ? 11 : (this.state.currentMonth - 1);
+                changedYear = (this.state.currentMonth === 0) ? (this.state.currentYear - 1) : this.state.currentYear;
+                break;
+            case "curr":
+                // Do nothing.
+                break;
+            case "next":
+                changedMonth = (this.state.currentMonth === 11) ? 0 : (this.state.currentMonth + 1);
+                changedYear = (this.state.currentMonth === 11) ? (this.state.currentYear + 1) : this.state.currentYear;
+                break;
+            default:
+                // Do nothing.
+        }
+        this._setDateValues(new Date(changedYear, changedMonth, changedDate).getDay(), changedDate, changedMonth, changedYear);
+
+        // Call onChange when user clicks a date.
+        this._onDateChange();
+    },
+
+    _handleCalendarButtons: function (directions, calendarType) {
+        
+        var changedMonth = null,
+            changedYear = null;
+
+        switch (calendarType) {
+            case "month":
+                switch (directions) {
+                    case "prev":
+                        changedMonth = (this.state.currentMonth === 0) ? 11 : (this.state.currentMonth - 1);
+                        changedYear = (this.state.currentMonth === 0) ? (this.state.currentYear - 1) : this.state.currentYear;
+                        break;
+                    case "next":
+                        changedMonth = (this.state.currentMonth === 11) ? 0 : (this.state.currentMonth + 1);
+                        changedYear = (this.state.currentMonth === 11) ? (this.state.currentYear + 1) : this.state.currentYear;
+                        break;
+                    default:
+                        // Do nothing.
+                }
+                break;
+            case "year":
+                changedMonth = this.state.currentMonth;
+                switch (directions) {
+                    case "prev":
+                        changedYear = (this.state.currentYear - 1);
+                        break;
+                    case "next":
+                        changedYear = (this.state.currentYear + 1);
+                        break;
+                    default:
+                        // Do nothing.
+                }
+                // year cant be less than 1970. If it is less than 1970 do nothing. 
+                if (changedYear < 1970) { return; }
+                break;
+            default:
+                // Do nothing.
+        }
+        this._setDateValues(new Date(changedYear, changedMonth, this.state.currentDate).getDay(), this.state.currentDate, changedMonth, changedYear);
+    },
+    
+    _showDaysRow: function () {
+        var daysRow = daysLabel.map(function (eachDay, idx) {
+            return (<div key={idx} className="col">{eachDay}</div>);
+        });
+
+        return daysRow;
+    },
+
+    _showPreviousMonthDays: function () {
+        var thisMonthStartDay = new Date(this.state.currentYear, this.state.currentMonth, 1).getDay(),
+            previousMonth = (this.state.currentMonth === 0) ? 11 : (this.state.currentMonth - 1),
+            previousYear = (this.state.currentMonth === 0) ? (this.state.currentYear - 1) : this.state.currentYear,
+            previousMonthNoOfDays = checkLeapYear(previousMonth, previousYear) ? 29 : daysInMonth[previousMonth],
+            day = (previousMonthNoOfDays - (thisMonthStartDay - 1)),
+            dayBox = [];
+
+        // Running a loop from 0 till thisMonthStartDate and filling previous month days.
+        for (var i = 0; i < thisMonthStartDay; i++, day++) {
+            var dateObj = new Date(this.state.currentYear, (this.state.currentMonth - 1), day);
+            dayBox.push(<div key={dateObj.toString()} className="col" onClick={this._handleDateClick.bind(this, "prev")}>{day}</div>);
+        }
+        // Running a loop from thisMonthStartDay till 7 and filling this month days.
+        day = 1; // Starting day again from 1. (ie: this month starting date)
+        for (var i = thisMonthStartDay; i < 7; i++, day++) {
+            var dateObj = new Date(this.state.currentYear, this.state.currentMonth, day);
+            dayBox.push(<div key={dateObj.toString()} className="col" onClick={this._handleDateClick.bind(this, "curr")}>{day}</div>);
+        }
+
+        return (<div key="row-1" className="row">
+                    {dayBox}
+                </div>);
+    },
+
+    _showThisMonthAndNextMonthDays: function () {
+        var thisMonthStartDay = new Date(this.state.currentYear, this.state.currentMonth, 1).getDay(),
+            monthLength = checkLeapYear(this.state.currentMonth, this.state.currentYear) ? 29 : daysInMonth[this.state.currentMonth],
+            nextMonthCheck = false,
+            nextMonth = (this.state.currentMonth === 11) ? 0 : (this.state.currentMonth + 1),
+            nextYear = (this.state.currentMonth === 11) ? (this.state.currentYear + 1) : this.state.currentYear,
+            day = ((7 - thisMonthStartDay) + 1),
+            dayRows = [];
+
+        for (var i = 0; i < 5; i++) {
+            var dayBox = [];
+            for (var j = 0; j < 7; j++, day++) {
+                if (day > monthLength) { day = 1; nextMonthCheck = true; }
+                var dateObj = (nextMonthCheck) ? new Date(nextYear, nextMonth, day) : new Date(this.state.currentYear, this.state.currentMonth, day);
+                dayBox.push(<div key={dateObj.toString()} className="col" onClick={this._handleDateClick.bind(this, ((nextMonthCheck) ? "next" : "curr"))}>
+                                {day}
+                            </div>);
+            }
+            dayRows.push(<div key={"row-" + (i + 2)} className="row">{dayBox}</div>);
+        }
+
+        return dayRows;
+    },
+    
     getInitialState: function () {
         return ({
             "currentDay":  null, // Stores day of the week (from 0 - 6)
@@ -150,6 +287,7 @@ var Calendar = React.createClass({
             "currentYear": this.props.defaultDate.getFullYear()
         });
     },
+
     render: function () {
         console.log("this.state: ", this.state);
         return (<section className="calendar-container">
@@ -157,7 +295,31 @@ var Calendar = React.createClass({
                         <input type="text" className="input-box" placeholder="DD/MM/YYYY" onChange={this._onEnteringDate}/>
                         <p className="error-msg" ref="inputBoxErrorMsg"></p>
                     </div>
-                    <div className="calendar">
+                    <div className="calendar-display-container">
+                        <div className="calendar-btn-group">
+                            <div className="month-btn-group">
+                                <span className="prev-btn" onClick={this._handleCalendarButtons.bind(this, "prev", "month")}></span>
+                                <span className="label-btn">{monthsLabel[this.state.currentMonth]}</span>
+                                <span className="next-btn" onClick={this._handleCalendarButtons.bind(this, "next", "month")}></span>
+                            </div>
+                            <div className="year-btn-group">
+                                <span className="prev-btn" onClick={this._handleCalendarButtons.bind(this, "prev", "year")}></span>
+                                <span className="label-btn">{this.state.currentYear}</span>
+                                <span className="next-btn" onClick={this._handleCalendarButtons.bind(this, "next", "year")}></span>
+                            </div>
+                        </div>
+                        <div className="table">
+                            <div className="head">
+                                <div className="row">
+                                    {this._showDaysRow()}
+                                </div>
+                            </div>
+                            <div className="body">
+                                {this._showPreviousMonthDays()}
+                                {this._showThisMonthAndNextMonthDays()}
+                            </div>
+                        </div>
+                        <p className="error-msg" ref="calendarBoxErrorMsg"></p>
                     </div>
                 </section>);
     }
