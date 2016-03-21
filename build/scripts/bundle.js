@@ -19196,7 +19196,6 @@ var Calendar = React.createClass({displayName: "Calendar",
     },
 
     _handleCalendarButtons: function (directions, calendarType) {
-        
         var changedMonth = null,
             changedYear = null;
 
@@ -19227,7 +19226,7 @@ var Calendar = React.createClass({displayName: "Calendar",
                     default:
                         // Do nothing.
                 }
-                // year cant be less than 1970. If it is less than 1970 do nothing. 
+                // year cant be less than 1970. If it is less than 1970 do nothing.
                 if (changedYear < 1970) { return; }
                 break;
             default:
@@ -19235,7 +19234,7 @@ var Calendar = React.createClass({displayName: "Calendar",
         }
         this._setDateValues(new Date(changedYear, changedMonth, this.state.currentDate).getDay(), this.state.currentDate, changedMonth, changedYear);
     },
-    
+
     _showDaysRow: function () {
         var daysRow = daysLabel.map(function (eachDay, idx) {
             return (React.createElement("div", {key: idx, className: "col"}, eachDay));
@@ -19250,18 +19249,39 @@ var Calendar = React.createClass({displayName: "Calendar",
             previousYear = (this.state.currentMonth === 0) ? (this.state.currentYear - 1) : this.state.currentYear,
             previousMonthNoOfDays = checkLeapYear(previousMonth, previousYear) ? 29 : daysInMonth[previousMonth],
             day = (previousMonthNoOfDays - (thisMonthStartDay - 1)),
-            dayBox = [];
+            dayBox = [],
+            checkValidity = function (that, dateObj) {
+                if (that.props.startDateLimit || that.state.endDateLimit) {
+                    var check = that._checkIfDateIsWithinLimit(dateObj, that.props.startDateLimit, that.props.endDateLimit);
+                    if (!check.validity) {
+                        // If date is not in limit.
+                        return false;
+                    }
+                }
+                return true;
+            };
 
         // Running a loop from 0 till thisMonthStartDate and filling previous month days.
         for (var i = 0; i < thisMonthStartDay; i++, day++) {
             var dateObj = new Date(this.state.currentYear, (this.state.currentMonth - 1), day);
-            dayBox.push(React.createElement("div", {key: dateObj.toString(), className: "col", onClick: this._handleDateClick.bind(this, "prev")}, day));
+            dayBox.push(React.createElement("div", {key: dateObj.toString(), className:  "col prev-month" + (checkValidity(this, dateObj) ? "" : " expired"), onClick: this._handleDateClick.bind(this, "prev")}, 
+                        React.createElement("span", {className: "label"}, day)
+                        ));
         }
         // Running a loop from thisMonthStartDay till 7 and filling this month days.
         day = 1; // Starting day again from 1. (ie: this month starting date)
         for (var i = thisMonthStartDay; i < 7; i++, day++) {
+            var dayClassName = "col curr-month";
             var dateObj = new Date(this.state.currentYear, this.state.currentMonth, day);
-            dayBox.push(React.createElement("div", {key: dateObj.toString(), className: "col", onClick: this._handleDateClick.bind(this, "curr")}, day));
+            if (!checkValidity(this, dateObj)) {
+                dayClassName += " expired"
+            }
+            if (day === this.state.currentDate) {
+                dayClassName += " active";
+            }
+            dayBox.push(React.createElement("div", {key: dateObj.toString(), className: dayClassName, onClick: this._handleDateClick.bind(this, "curr")}, 
+                            React.createElement("span", {className: "label"}, day)
+                        ));
         }
 
         return (React.createElement("div", {key: "row-1", className: "row"}, 
@@ -19276,23 +19296,41 @@ var Calendar = React.createClass({displayName: "Calendar",
             nextMonth = (this.state.currentMonth === 11) ? 0 : (this.state.currentMonth + 1),
             nextYear = (this.state.currentMonth === 11) ? (this.state.currentYear + 1) : this.state.currentYear,
             day = ((7 - thisMonthStartDay) + 1),
-            dayRows = [];
+            dayRows = [],
+            checkValidity = function (that, dateObj) {
+                if (that.props.startDateLimit || that.state.endDateLimit) {
+                    var check = that._checkIfDateIsWithinLimit(dateObj, that.props.startDateLimit, that.props.endDateLimit);
+                    if (!check.validity) {
+                        // If date is not in limit.
+                        return false;
+                    }
+                }
+                return true;
+            };
 
-        for (var i = 0; i < 5; i++) {
-            var dayBox = [];
-            for (var j = 0; j < 7; j++, day++) {
-                if (day > monthLength) { day = 1; nextMonthCheck = true; }
-                var dateObj = (nextMonthCheck) ? new Date(nextYear, nextMonth, day) : new Date(this.state.currentYear, this.state.currentMonth, day);
-                dayBox.push(React.createElement("div", {key: dateObj.toString(), className: "col", onClick: this._handleDateClick.bind(this, ((nextMonthCheck) ? "next" : "curr"))}, 
-                                day
+            for (var i = 0; i < 5; i++) {
+                var dayBox = [];
+                for (var j = 0; j < 7; j++, day++) {
+                    var dayClassName = "col curr-month";
+                    if (day > monthLength) { day = 1; nextMonthCheck = true; dayClassName = "col next-month" }
+                    if (nextMonthCheck) { dayClassName = "col next-month"; }
+                    var dateObj = (nextMonthCheck) ? new Date(nextYear, nextMonth, day) : new Date(this.state.currentYear, this.state.currentMonth, day);
+                    if (!checkValidity(this, dateObj)) {
+                        dayClassName += " expired"
+                    }
+                    if (day === this.state.currentDate) {
+                        dayClassName += " active";
+                    }
+                    dayBox.push(React.createElement("div", {key: dateObj.toString(), className: dayClassName, onClick: this._handleDateClick.bind(this, ((nextMonthCheck) ? "next" : "curr"))}, 
+                            React.createElement("span", {className: "label"}, day)
                             ));
+                }
+                dayRows.push(React.createElement("div", {key: "row-" + (i + 2), className: "row"}, dayBox));
             }
-            dayRows.push(React.createElement("div", {key: "row-" + (i + 2), className: "row"}, dayBox));
-        }
 
         return dayRows;
     },
-    
+
     getInitialState: function () {
         return ({
             "currentDay":  null, // Stores day of the week (from 0 - 6)

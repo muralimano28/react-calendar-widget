@@ -64,7 +64,12 @@
 .calendar-container .calendar-display-container .table .col {
     display: inline-block;
     width: 13%;
-    border: 1px solid #ccc;
+    height: 2em;
+    cursor: pointer;
+}
+.calendar-container .calendar-display-container .table .col.next-month,
+.calendar-container .calendar-display-container .table .col.prev-month {
+    color: #999;
 }
 .calendar-container .calendar-display-container .table .head .col {
     font-weight: 600;
